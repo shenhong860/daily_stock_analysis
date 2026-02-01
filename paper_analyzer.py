@@ -17,6 +17,7 @@ class PaperAnalyzer:
         """抓取最近24小时的论文"""
         client = arxiv.Client()
         papers = []
+        # 修复：使用带时区的 UTC 时间
         yesterday = datetime.now(timezone.utc) - timedelta(days=1)
         
         for keyword in keywords:
@@ -27,7 +28,7 @@ class PaperAnalyzer:
             )
             
             for result in client.results(search):
-                # 只取最近24小时的
+                # 现在可以正常比较了
                 if result.published >= yesterday:
                     papers.append({
                         'title': result.title,
@@ -40,7 +41,7 @@ class PaperAnalyzer:
                     })
         return papers
 
-            def analyze_with_ai(self, paper):
+    def analyze_with_ai(self, paper):
         """精简版论文分析，适合快速阅读"""
         # 检测是否为单细胞/生物信息学领域
         categories = [c.lower() for c in paper['categories']]
@@ -110,7 +111,6 @@ class PaperAnalyzer:
             
         except Exception as e:
             return f"❌ 分析失败: {str(e)}"
-        
 
     def send_feishu(self, content):
         """推送到飞书"""
