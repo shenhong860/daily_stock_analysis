@@ -52,3 +52,6 @@ feedparser==6.0.11
 beautifulsoup4==4.12.3
 wikipedia-api==0.5.8
 xmltodict==0.13.0
+akshare==1.15.28
+pandas==2.2.3
+numpy==1.26.4
