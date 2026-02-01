@@ -32,6 +32,6 @@ jobs:
         OPENAI_BASE_URL: ${{ secrets.OPENAI_BASE_URL }}
         OPENAI_MODEL: ${{ secrets.OPENAI_MODEL }}
         # 可以用独立机器人，也可以复用论文机器人
-        GITHUB_FEISHU_URL: ${{ secrets.GITHUB_FEISHU_URL || secrets.PAPER_FEISHU_URL || secrets.FEISHU_WEBHOOK_URL }}
+        TRENDING_FEISHU_URL: ${{ secrets.GITHUB_FEISHU_URL || secrets.PAPER_FEISHU_URL || secrets.FEISHU_WEBHOOK_URL }}
       run: |
         python github_trending.py --languages "${{ github.event.inputs.languages || 'python,typescript,go,jupyter notebook' }}"
