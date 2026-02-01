@@ -18,7 +18,7 @@ class PaperAnalyzer:
         client = arxiv.Client()
         papers = []
         # 修复：使用带时区的 UTC 时间
-        yesterday = datetime.now(timezone.utc) - timedelta(days=1)
+        yesterday = datetime.now(timezone.utc) - timedelta(days=3)
         
         for keyword in keywords:
             search = arxiv.Search(
