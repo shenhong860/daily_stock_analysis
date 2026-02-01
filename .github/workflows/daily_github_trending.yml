@@ -1,0 +1,37 @@
+name: 每日GitHub热点
+
+on:
+  schedule:
+    # 每天早上 9:30（北京时间），比论文晚半小时
+    - cron: '30 1 * * *'
+  workflow_dispatch:
+    inputs:
+      languages:
+        description: '编程语言（逗号分隔）'
+        required: true
+        default: 'python,typescript,go'
+
+jobs:
+  trending-analysis:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+    
+    - name: Install dependencies
+      run: |
+        pip install requests beautifulsoup4
+    
+    - name: Run GitHub Trending analysis
+      env:
+        OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        OPENAI_BASE_URL: ${{ secrets.OPENAI_BASE_URL }}
+        OPENAI_MODEL: ${{ secrets.OPENAI_MODEL }}
+        # 可以用独立机器人，也可以复用论文机器人
+        GITHUB_FEISHU_URL: ${{ secrets.GITHUB_FEISHU_URL || secrets.PAPER_FEISHU_URL || secrets.FEISHU_WEBHOOK_URL }}
+      run: |
+        python github_trending.py --languages "${{ github.event.inputs.languages || 'python,typescript,go,jupyter notebook' }}"
