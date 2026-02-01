@@ -1,0 +1,44 @@
+name: 每日基金分析
+
+on:
+  schedule:
+    # 每天晚上 21:00（北京时间），美股收盘后数据最全
+    - cron: '0 13 * * *'
+  workflow_dispatch:
+    inputs:
+      funds:
+        description: '基金代码（逗号分隔）'
+        required: true
+        default: '000001,005827,110011'
+      analysis_type:
+        description: '分析类型'
+        type: choice
+        options:
+          - full          # 完整分析
+          - valuation     # 仅估值提醒
+          -定投建议      # 定投策略
+        default: 'full'
+
+jobs:
+  fund-analysis:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+    
+    - name: Install dependencies
+      run: |
+        pip install akshare requests pandas numpy
+    
+    - name: Run Fund Analysis
+      env:
+        OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        OPENAI_BASE_URL: ${{ secrets.OPENAI_BASE_URL }}
+        OPENAI_MODEL: ${{ secrets.OPENAI_MODEL }}
+        FUND_FEISHU_URL: ${{ secrets.FUND_FEISHU_URL || secrets.FEISHU_WEBHOOK_URL }}
+      run: |
+        python fund_analyzer.py \
+          --funds "${{ github.event.inputs.funds || '000001,005827,110011' }}" \
+          --type "${{ github.event.inputs.analysis_type || 'full' }}"
