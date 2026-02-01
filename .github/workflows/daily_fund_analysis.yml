@@ -9,14 +9,14 @@ on:
       funds:
         description: '基金代码（逗号分隔）'
         required: true
-        default: '000001,005827,110011'
+        default: '022477,016482,010011'
       analysis_type:
         description: '分析类型'
         type: choice
         options:
           - full          # 完整分析
           - valuation     # 仅估值提醒
-          -定投建议      # 定投策略
+          - 定投建议      # 定投策略
         default: 'full'
 
 jobs:
@@ -40,5 +40,5 @@ jobs:
         FUND_FEISHU_URL: ${{ secrets.FUND_FEISHU_URL || secrets.FEISHU_WEBHOOK_URL }}
       run: |
         python fund_analyzer.py \
-          --funds "${{ github.event.inputs.funds || '000001,005827,110011' }}" \
+          --funds "${{ github.event.inputs.funds || '022477,016482,010011' }}" \
           --type "${{ github.event.inputs.analysis_type || 'full' }}"
