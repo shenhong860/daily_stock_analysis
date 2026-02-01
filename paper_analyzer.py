@@ -40,7 +40,7 @@ class PaperAnalyzer:
                     })
         return papers
 
-        def analyze_with_ai(self, paper):
+            def analyze_with_ai(self, paper):
         """精简版论文分析，适合快速阅读"""
         # 检测是否为单细胞/生物信息学领域
         categories = [c.lower() for c in paper['categories']]
@@ -93,7 +93,7 @@ class PaperAnalyzer:
             'model': self.model,
             'messages': [{'role': 'user', 'content': prompt}],
             'temperature': 0.4,
-            'max_tokens': 1200  # 控制输出长度，节省Token
+            'max_tokens': 1200
         }
         
         try:
@@ -106,11 +106,11 @@ class PaperAnalyzer:
             result = response.json()
             analysis = result['choices'][0]['message']['content']
             
-            # 精简页脚
             return f"{analysis}\n\n📄 {paper['pdf_url']}"
             
         except Exception as e:
             return f"❌ 分析失败: {str(e)}"
+        
 
     def send_feishu(self, content):
         """推送到飞书"""
