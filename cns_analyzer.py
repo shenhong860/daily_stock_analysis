@@ -45,7 +45,7 @@ class CNSAnalyzer:
         for journal_name, rss_url in self.journals.items():
             try:
                 feed = feedparser.parse(rss_url)
-                # 只取最近24小时的前2篇
+                # 只取最近的前2篇
                 for entry in feed.entries[:2]:
                     # 检查是否为生物医学相关
                     content = f"{entry.title} {entry.get('summary', '')}".lower()
@@ -66,7 +66,7 @@ class CNSAnalyzer:
         
         return papers
     
-        def deep_analysis(self, paper):
+    def deep_analysis(self, paper):
         """修复版：禁止Markdown，使用纯文本Emoji格式"""
         prompt = f"""你是Cell/Nature期刊的资深审稿人，请对这篇顶刊文章进行"研究生组会汇报"级别的深度解析。
 
@@ -131,9 +131,21 @@ class CNSAnalyzer:
                 timeout=90
             )
             result = response.json()['choices'][0]['message']['content']
-            # 后处理：再过滤一次Markdown符号以防万一
-            result = result.replace('#', '').replace('**', '').replace('*', '•').replace('-', '•')
+            
+            # 后处理保险：强制过滤Markdown符号
+            result = (result
+                     .replace('#', '')
+                     .replace('**', '')
+                     .replace('*', '•')
+                     .replace('- ', '• ')
+                     .replace('`', '')
+                     .replace('>', '')
+                     .replace('###', '')
+                     .replace('##', '')
+                     .replace('__', ''))
+            
             return result
+            
         except Exception as e:
             return f"分析失败: {str(e)}"
     
@@ -154,14 +166,14 @@ class CNSAnalyzer:
         papers = self.fetch_cns_papers()
         
         if not papers:
-            self.send_feishu("📭 今日CNS无生物医学相关新文，或抓取被墙")
+            self.send_feishu("📭 今日CNS无生物医学相关新文，或RSS抓取失败")
             return
         
         report = f"📊 扫描 {len(self.journals)} 本顶刊，精选 {len(papers)} 篇\n\n"
         
         for i, paper in enumerate(papers, 1):
             analysis = self.deep_analysis(paper)
-            report += f"━━━━━━━━━━━━\n【{i}】{paper['journal']} | {paper['title'][:60]}...\n{analysis}\n🔗 {paper['link']}\n\n"
+            report += f"━━━━━━━━━━━━\n【{i}】{paper['journal']} | {paper['title'][:50]}...\n{analysis}\n\n"
         
         self.send_feishu(report)
         print(f"CNS推送完成，共{len(papers)}篇")
@@ -173,7 +185,7 @@ class CNSAnalyzer:
             
         payload = {
             "msg_type": "text",
-            "content": {"text": f"🏆 **CNS晨读** | {datetime.now().strftime('%m-%d')}\n\n{text}"}
+            "content": {"text": f"🏆 CNS晨读 | {datetime.now().strftime('%m-%d')}\n\n{text}"}
         }
         requests.post(self.feishu_url, json=payload)
 
