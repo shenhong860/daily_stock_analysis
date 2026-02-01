@@ -2,7 +2,7 @@ import os
 import json
 import requests
 import arxiv
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import argparse
 
 class PaperAnalyzer:
@@ -17,7 +17,7 @@ class PaperAnalyzer:
         """抓取最近24小时的论文"""
         client = arxiv.Client()
         papers = []
-        yesterday = datetime.now() - timedelta(days=1)
+        yesterday = datetime.now(timezone.utc) - timedelta(days=1)
         
         for keyword in keywords:
             search = arxiv.Search(
