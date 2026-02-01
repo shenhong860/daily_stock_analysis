@@ -10,7 +10,7 @@ class GitHubTrendingAnalyzer:
         self.api_key = os.getenv('OPENAI_API_KEY')
         self.base_url = os.getenv('OPENAI_BASE_URL', 'https://api.deepseek.com/v1')
         self.model = os.getenv('OPENAI_MODEL', 'deepseek-reasoner')
-        self.feishu_url = os.getenv('GITHUB_FEISHU_URL')
+        self.feishu_url = os.getenv('TRENDING_FEISHU_URL')
         
     def fetch_trending(self, language):
         """抓取 GitHub Trending 页面"""
