@@ -1,0 +1,23 @@
+name: 每日循证生活
+
+on:
+  schedule:
+    - cron: '0 12 * * *'  # UTC 12:00 = 北京时间 20:00
+  workflow_dispatch:
+
+jobs:
+  life-science:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+    - run: pip install requests wikipedia-api feedparser
+    - name: Run Life Science Facts
+      env:
+        OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        OPENAI_BASE_URL: ${{ secrets.OPENAI_BASE_URL }}
+        OPENAI_MODEL: ${{ secrets.OPENAI_MODEL }}
+        LIFE_FEISHU_URL: ${{ secrets.LIFE_FEISHU_URL || secrets.FEISHU_WEBHOOK_URL }}
+      run: python life_science.py
