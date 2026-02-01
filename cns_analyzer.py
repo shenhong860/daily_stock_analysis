@@ -66,42 +66,49 @@ class CNSAnalyzer:
         
         return papers
     
-    def deep_analysis(self, paper):
-        """如同导师审稿般的深度分析"""
-        prompt = f"""你是Cell/Nature期刊的资深审稿人，请对这篇顶刊文章进行"研究生组会汇报"级别的深度解析（总字数<600字，严格结构）：
+        def deep_analysis(self, paper):
+        """修复版：禁止Markdown，使用纯文本Emoji格式"""
+        prompt = f"""你是Cell/Nature期刊的资深审稿人，请对这篇顶刊文章进行"研究生组会汇报"级别的深度解析。
+
+【重要格式要求 - 严格遵守】：
+❌ 禁止使用任何Markdown符号：# ## ### * - ** ` > 等
+✅ 只允许使用：emoji、中文、英文、数字、换行、空格
+✅ 层级用emoji表示：🏆 主标题，🧬 子标题，• 列表项（用中文顿号或点号，不要用*）
+✅ 链接单独一行放最后
 
 【文章信息】
 期刊：{paper['journal']}
 标题：{paper['title']}
 摘要片段：{paper['summary']}
 
-【要求输出 - 不符合顶刊水平直接指出】：
+【输出格式模板 - 严格按照此格式】：
 
-🏆 **研究档次**
-• 期刊实力：{paper['journal']} (IF: {self._get_if(paper['journal'])})
-• 研究类型：是【概念突破】/【技术革命】/【临床转化】/【机制深挖】？
-• 一句话评级：这可能是领域里程碑/重要补充/ incremental work?
+🏆 研究档次
+期刊：{paper['journal']} (IF: {self._get_if(paper['journal'])})
+类型：【概念突破】或【技术革命】或【临床转化】或【机制深挖】
+评级：一句话（如：里程碑工作/重要补充/incremental work）
 
-🧬 **核心发现（精华！）**
-• 颠覆了哪个传统认知？或填补了哪个空白？
-• 关键实验设计：用什么新技术/模型解决了什么老问题？
-• 数据规模：涉及多少样本/细胞/基因？（体现工作量）
+🧬 核心发现（精华）
+• 颠覆认知：一句话概括（如：颠覆了什么传统认知？）
+• 关键技术：用什么新技术解决了什么老问题？
+• 数据规模：涉及多少样本/细胞/基因？
 
-💊 **医学意义（如果你是临床医生）**
-• 能立刻改变诊疗指南吗？还是需要10年转化？
-• 潜在靶点是否已有药物可用？（老药新用 vs 全新靶点）
+💊 医学意义
+• 临床价值：能否立刻改变诊疗指南？还是需要10年转化？
+• 靶点现状：是否已有药物可用？
 
-⚠️ **审稿人视角的质疑（Critical Thinking）**
-• 实验设计是否有漏洞？（如：仅用细胞系，缺乏体内验证）
-• 机制是否过于相关论，缺乏因果？（如：仅用敲低，无 rescue）
-• 样本是否有偏倚？（如：仅早期患者，或特定人种）
+⚠️ 审稿人质疑
+• 设计漏洞：（如：仅用细胞系缺乏体内验证）
+• 机制深度：相关还是因果？
+• 样本偏倚：（如：仅早期患者）
 
-🎯 **你能学到什么？**
-• 技术：可迁移到你课题的方法（如：某新型测序方案）
-• 思路：如何提出一个值得发CNS的科学问题？
-• 写作：标题/摘要的哪些技巧值得模仿？
+🎯 你能学到
+• 技术：可迁移的方法
+• 思路：如何提出CNS级科学问题？
 
-【严禁套路化评价，必须有具体批判点】
+链接：{paper['link']}
+
+【字数限制】总字数<500字，每部分简短精炼，不要展开长篇大论。
 """
         
         headers = {
@@ -112,8 +119,8 @@ class CNSAnalyzer:
         data = {
             'model': self.model,
             'messages': [{'role': 'user', 'content': prompt}],
-            'temperature': 0.4,  # 降低温度，更批判性
-            'max_tokens': 1200
+            'temperature': 0.4,
+            'max_tokens': 1000
         }
         
         try:
@@ -123,7 +130,10 @@ class CNSAnalyzer:
                 json=data,
                 timeout=90
             )
-            return response.json()['choices'][0]['message']['content']
+            result = response.json()['choices'][0]['message']['content']
+            # 后处理：再过滤一次Markdown符号以防万一
+            result = result.replace('#', '').replace('**', '').replace('*', '•').replace('-', '•')
+            return result
         except Exception as e:
             return f"分析失败: {str(e)}"
     
