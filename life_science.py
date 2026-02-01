@@ -179,20 +179,30 @@ class LifeScienceBot:
         except Exception as e:
             return f"生成失败: {str(e)}"
     
-    def run(self):
+        def run(self):
         wiki_fact = self.fetch_wikipedia_fact()
         pubmed_study = self.fetch_pubmed_health_tip()
         
+        # 打印调试信息到 Actions 日志
+        print(f"Wiki获取: {'成功' if wiki_fact else '失败'}")
+        print(f"PubMed获取: {'成功' if pubmed_study else '失败'}")
+        
+        # 如果都失败了，推送错误提示而不是空白
         if not wiki_fact and not pubmed_study:
-            self.send_feishu("📭 今日科普素材获取失败，请手动检查网络")
+            self.send_feishu("📭 今日科普素材获取失败\n可能原因：\n• Wikipedia API被墙\n• PubMed无新文献\n• 网络超时")
             return
         
         content = self.verify_and_summarize(wiki_fact, pubmed_study)
         
+        # 检查内容是否为空
+        if not content or len(content.strip()) < 50:
+            print(f"内容生成异常，内容长度: {len(content) if content else 0}")
+            content = "⚠️ 内容生成失败，可能是DeepSeek API超时或返回格式异常"
+        
         footer = f"""
 链接核查：
-• 百科来源：{wiki_fact['source'] if wiki_fact else 'N/A'} {wiki_fact['url'] if wiki_fact else ''}
-• 研究来源：{pubmed_study['source'] if pubmed_study else 'N/A'} {pubmed_study['url'] if pubmed_study else ''}
+• 百科来源：{wiki_fact['source'] if wiki_fact else 'N/A'} {wiki_fact['url'] if wiki_fact else '无'}
+• 研究来源：{pubmed_study['source'] if pubmed_study else 'N/A'} {pubmed_study['url'] if pubmed_study else '无'}
 ⚖️ 免责声明：以上信息仅供科普，不作为医疗建议，具体诊疗请咨询医师。
         """
         
