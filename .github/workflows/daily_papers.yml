@@ -1,0 +1,44 @@
+name: 每日论文解读
+
+on:
+  schedule:
+    # 每天早上 9:00（北京时间），arXiv 一般这时候更新
+    - cron: '0 1 * * *'  # UTC 1:00 = 北京时间 9:00
+  workflow_dispatch:
+    inputs:
+      keywords:
+        description: '搜索关键词（逗号分隔）'
+        required: true
+        default: 'LLM,multimodal'
+      max_results:
+        description: '每个关键词抓取数量'
+        required: true
+        default: '3'
+
+jobs:
+  analyze-papers:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+    
+    - name: Install dependencies
+      run: |
+        pip install requests feedparser arxiv
+    
+    - name: Run paper analysis
+      env:
+        OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        OPENAI_BASE_URL: ${{ secrets.OPENAI_BASE_URL }}
+        OPENAI_MODEL: ${{ secrets.OPENAI_MODEL }}
+        FEISHU_WEBHOOK_URL: ${{ secrets.FEISHU_WEBHOOK_URL }}
+        # 可选：单独配置论文推送渠道
+        PAPER_FEISHU_URL: ${{ secrets.PAPER_FEISHU_URL }}
+      run: |
+        python paper_analyzer.py \
+          --keywords "${{ github.event.inputs.keywords || 'LLM,RAG,Agent' }}" \
+          --max ${{ github.event.inputs.max_results || '3' }}
